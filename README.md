@@ -79,7 +79,7 @@ uv run ww_manager.py -p "/path/to/New Wuthering Waves Game" download bilibili
 
 [慢速] 同步、修复和更新。
 
-  * 这是工具的核心\*\*“慢速”\*\*功能。
+  * 这是工具的核心功能。
   * 它会连接到当前配置的服务器API，获取完整的文件清单。
   * 使用MD5缓存（如果存在）快速校验所有本地文件。
   * 自动下载缺失、损坏或版本过时的文件。
@@ -98,7 +98,7 @@ uv run ww_manager.py -p "/path/to/Wuthering Waves Game" sync
 
 [快速] 瞬时切换服务器。
 
-  * 这是工具的核心\*\*“快速”\*\*功能。
+  * 这是工具的核心快速功能。
   * 它**不联网**，**不校验MD5**。
   * 它只执行文件重命名：
     1.  禁用当前服的差异文件 (例如 `...Kuro.pak` -\> `...Kuro.pak.bak`)。
