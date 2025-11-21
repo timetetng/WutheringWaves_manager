@@ -1,0 +1,15 @@
+[project]
+name = "ww-manager"
+version = "2.0.0"
+description = "鸣潮 (Wuthering Waves) 命令行管理器"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["typer", "tqdm", "certifi"]
+
+[project.scripts]
+# 这里定义命令 'ww' 指向 wuwa_manager.py 中的 app 对象
+ww = "wuwa_manager:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
