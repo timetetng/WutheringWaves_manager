@@ -156,13 +156,7 @@ uv tool uninstall ww-manager
 
 <!-- end list -->
 
-```
-
 ### 接下来该做什么？
-
-1.  **保存文件**：确保 `pyproject.toml` 和 `wuwa_manager.py` 在同一目录下。
-2.  **执行安装**：在终端运行 `uv tool install .`。
-3.  **测试**：输入 `ww --help` 看是否出现漂亮的帮助界面。
 
 如果有任何报错或者建议，随时通过 **issue** 告诉我！
 
