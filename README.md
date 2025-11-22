@@ -129,7 +129,7 @@ ww download cn
 1. **Steam 设置**：
 
       * 添加“非 Steam 游戏”，指向 `/Client/Binaries/Win64/Client-Win64-Shipping.exe`。
-      * 在兼容性中强制使用 `GE-Proton` (参考项目` LutheringLaves` 下载最新 GE-Proton 或 下面的)。
+      * 在兼容性中强制使用 `GE-Proton` (参考项目` LutheringLaves` 或下面的指南下载并配置最新 GE-Proton )。
 
 2. **启动参数**：
     在 Steam 启动选项中添加：
