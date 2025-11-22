@@ -22,7 +22,7 @@
 ### 1. 安装 uv (如果尚未安装)
 
 ```bash
-curl -LsSf [https://astral.sh/uv/install.sh](https://astral.sh/uv/install.sh) | sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ````
 
 ### 2\. 安装本工具
