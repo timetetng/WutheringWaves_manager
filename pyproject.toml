@@ -1,13 +1,12 @@
 [project]
 name = "ww-manager"
-version = "2.0"
+version = "2.0.2"
 description = "鸣潮 (Wuthering Waves) 命令行管理器"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = ["typer", "tqdm", "certifi"]
+dependencies = ["typer", "tqdm", "certifi", "rich"]
 
 [project.scripts]
-# 指向 cli.py 中的 app
 ww = "cli:app"
 
 [build-system]

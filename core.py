@@ -13,7 +13,6 @@ from urllib.parse import urljoin, quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, List, Dict, Any
 
-# [修改] 使用 Rich 替代 Tqdm
 from rich.progress import (
     Progress,
     TextColumn,
@@ -221,8 +220,6 @@ class WGameManager:
                     if progress and task_id is not None:
                         progress.update(task_id, completed=expected_size)
                         if overall_task_id is not None:
-                            # 注意：这里如果已经下载过了，不需要给 Total 加 resume_byte，因为 Total 初始化时是按需下载的总量
-                            # 但如果是断点续传的一半，逻辑比较复杂。简单起见，这里假设 batch 计算时已经扣除了已完成文件
                             pass
                     success = True
                     break
@@ -292,7 +289,7 @@ class WGameManager:
 
         max_workers = 8
 
-        # [修改] 使用 Rich Progress 上下文
+        # 使用 Rich Progress 上下文
         progress = Progress(
             TextColumn("[bold blue]{task.description}", justify="right"),
             BarColumn(bar_width=None),
@@ -387,7 +384,8 @@ class WGameManager:
                 pass
             else:
                 missing = True
-                logger.warning(f"缺失差异文件: {f_rel}")
+                # 我发现这玩意没啥用
+                # logger.warning(f"缺失差异文件: {f_rel}")
 
         # 3. 更新配置
         self.server_type = target_server

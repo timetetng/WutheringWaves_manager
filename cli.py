@@ -1,5 +1,4 @@
 # cli.py
-import sys
 import logging
 import json
 import webbrowser
@@ -14,7 +13,6 @@ from config import load_app_config, save_app_config, APPID_TO_SERVER
 from core import WGameManager, WWError
 
 # --- 初始化 ---
-# 修复: add_completion=False 禁用默认的英文补全命令
 app = typer.Typer(
     help="鸣潮 (Wuthering Waves) CLI 管理器 v2.0",
     no_args_is_help=True,
@@ -116,7 +114,7 @@ def sync(ctx: typer.Context):
         try:
             d = json.loads(cfg_file.read_text(encoding="utf-8"))
             server = APPID_TO_SERVER.get(d.get("appId"), "cn")
-        except:
+        except Exception:
             pass
 
     try:
@@ -158,7 +156,12 @@ def checkout(
 
 
 @app.command()
-def log(ctx: typer.Context, open: bool = False):
+def log(
+    ctx: typer.Context,
+    open_browser: Annotated[
+        bool, typer.Option("--open", "-o", help="使用默认浏览器打开链接")
+    ] = False,
+):
     """获取抽卡分析链接"""
     path = get_game_path(ctx)
     log_file = path / "Client/Saved/Logs/Client.log"
@@ -181,7 +184,7 @@ def log(ctx: typer.Context, open: bool = False):
 
     if found:
         typer.secho(found, fg="green")
-        if open:
+        if open_browser:
             webbrowser.open(found)
     else:
         typer.echo("未找到链接，请先在游戏中打开历史记录。")
