@@ -1,9 +1,16 @@
 # 鸣潮 (Wuthering Waves) CLI Manager
 
-Version: 2.0
+<div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
-[![Manager](https://img.shields.io/badge/Tool-uv-purple.svg)](https://github.com/astral-sh/uv)
+  <a href="https://python.org">
+    <img src="https://img.shields.io/badge/Python-3.9%2B-blue.svg" alt="Python 3.9+">
+  </a>
+  <a href="https://github.com/astral-sh/uv">
+    <img src="https://img.shields.io/badge/Tool-uv-purple.svg" alt="uv">
+  </a>
+  <img src="https://img.shields.io/badge/Version-2.0-brightgreen.svg" alt="version 2.0">
+
+</div>
 
 专为 Linux 用户打造的《鸣潮》客户端命令行管理工具。
 
