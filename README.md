@@ -1,5 +1,7 @@
 # 鸣潮 (Wuthering Waves) CLI Manager
 
+Version: 2.0
+
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
 [![Manager](https://img.shields.io/badge/Tool-uv-purple.svg)](https://github.com/astral-sh/uv)
 
@@ -14,6 +16,7 @@
 * **📦 完整下载 (`download`)**：从零开始下载任一服务器的纯净客户端。
 * **💾 自动记忆**：自动记录游戏路径，一次设置，永久生效。
 * **⚡️ 现代化 CLI**：基于 `Typer` 构建，支持自动补全和帮助信息。
+* **👯 并行下载**: 使用多线程并行下载，避免 CDN 节点降速。
 
 ## 🔧 安装指南
 
@@ -36,7 +39,7 @@ uv tool install .
 安装完成后，你就可以在终端的任意位置直接使用 **`ww`** 命令了！
 
 > **升级/重新安装**：
-> 如果修改了代码，可以使用 `uv tool install . --force` 重新安装。
+> 如果修改了代码，可以使用 `uv tool install . --force` 更新工具。
 
 ## 📖 使用说明
 
@@ -78,7 +81,7 @@ ww checkout global
 
 > **注意**：如果切换后提示“文件缺失”，请运行 `ww sync` 进行下载修复。
 >
-> 也可以一步到位，运行 `ww checkout cn --force-sync` 同时完成切换和同步。
+> v2.0 开始，将会自动校验并补全文件, `--force-sync` 仅用于需要时，手动强制同步。
 
 #### 3\. 同步与修复 (`sync`)
 
