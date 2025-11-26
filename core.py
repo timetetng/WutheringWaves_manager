@@ -395,8 +395,10 @@ class WGameManager:
         for _, files in SERVER_DIFF_FILES.items():
             for f_rel in files:
                 f = self.game_folder / f_rel
+                bak = f.with_suffix(f.suffix + ".bak")
                 if f.exists():
-                    f.rename(f.with_suffix(f.suffix + ".bak"))
+                    # Windows 兼容性
+                    os.replace(f, bak)
                     self.md5_cache.clear(f)
 
         # 2. 启用目标差异文件
@@ -406,7 +408,8 @@ class WGameManager:
             bak = f.with_suffix(f.suffix + ".bak")
 
             if bak.exists():
-                bak.rename(f)
+                # Windows 兼容
+                os.replace(bak, f)
                 self.md5_cache.clear(f)
             elif f.exists():
                 pass

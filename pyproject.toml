@@ -1,6 +1,6 @@
 [project]
 name = "ww-manager"
-version = "2.0.5"
+version = "2.0.6"
 description = "鸣潮 (Wuthering Waves) 命令行管理器"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -28,6 +28,4 @@ ignore = []
 quote-style = "double"
 
 [dependency-groups]
-dev = [
-    "pre-commit>=4.3.0",
-]
+dev = ["pre-commit>=4.3.0"]

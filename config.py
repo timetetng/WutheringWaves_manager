@@ -1,11 +1,27 @@
 # config.py
 import json
 import logging
+import os
+import platform
 from pathlib import Path
 from typing import Any, Dict
 
+
 # --- 常量定义 ---
-CONFIG_DIR = Path.home() / ".config" / "ww_manager"
+def get_config_dir() -> Path:
+    """根据操作系统获取配置目录"""
+    if platform.system() == "Windows":
+        # Windows
+        appdata = os.getenv("APPDATA")
+        if appdata:
+            return Path(appdata) / "ww_manager"
+        return Path.home() / "AppData" / "Roaming" / "ww_manager"
+    else:
+        # Linux / macOS
+        return Path.home() / ".config" / "ww_manager"
+
+
+CONFIG_DIR = get_config_dir()
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 SERVER_CONFIGS = {
