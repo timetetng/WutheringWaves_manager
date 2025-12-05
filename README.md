@@ -1,4 +1,6 @@
-# 鸣潮 (Wuthering Waves) CLI Manager
+
+<div align="center"><h1>Wuthering Waves CLI Manager</h1><h3>鸣潮命令行管理器</h3></div>
+
 
 <div align="center">
   <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.9%2B-blue.svg" alt="Python 3.9+"></a>&nbsp;<a href="https://github.com/astral-sh/uv"><img src="https://img.shields.io/badge/Tool-uv-purple.svg" alt="uv"></a>&nbsp;<img src="https://img.shields.io/badge/Version-2.0-brightgreen.svg" alt="version 2.0">
