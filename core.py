@@ -203,6 +203,24 @@ class WGameManager:
                 raise NetworkError("无法下载文件清单")
         return self._game_index
 
+    # 获取预下载信息
+    @property
+    def predownload_index(self):
+        # 检查是否有 predownload 字段
+        pre_info = self.launcher_info.get("default", {}).get("predownload")
+        if not pre_info:
+            return None
+
+        # 构造预下载 index 的 URL
+        config = pre_info.get("config", {})
+        uri = config.get("indexFile")
+        if not uri:
+            return None
+
+        url = urljoin(self.cdn_node, uri)
+        logger.info("下载预下载文件清单 (Predownload Index)...")
+        return self._http_get_json(url)
+
     def _http_get_json(self, url: str) -> Optional[Any]:
         try:
             req = Request(url, headers={"User-Agent": "WW-Manager/2.0", "Accept-Encoding": "gzip"})
@@ -252,6 +270,7 @@ class WGameManager:
                     if progress and task_id is not None:
                         progress.update(task_id, completed=expected_size)
                         if overall_task_id is not None:
+                            # 这里不更新总进度，因为会在外部循环控制，或者 update(advance=0)
                             pass
                     success = True
                     break
@@ -350,6 +369,7 @@ class WGameManager:
                         progress.console.log("[red]有文件下载失败，请重试 sync[/red]")
 
     def sync_files(self, force_check_md5=False):
+        # 确保获取的是当前版本的配置
         res_base = self.launcher_info["default"]["resourcesBasePath"]
         res_list = self.game_index["resource"]
 
@@ -390,6 +410,121 @@ class WGameManager:
     def download_full(self):
         self.sync_files(force_check_md5=False)
 
+    # 执行预下载
+    def download_predownload(self):
+        pre_info = self.launcher_info.get("default", {}).get("predownload")
+        if not pre_info:
+            logger.warning("当前服务器暂无预下载信息。")
+            return
+
+        index = self.predownload_index
+        if not index:
+            logger.error("无法获取预下载清单。")
+            return
+
+        # 获取预下载的基础路径和资源列表
+        res_base = pre_info["resourcesBasePath"]
+        res_list = index["resource"]
+        version = pre_info["version"]
+
+        # 定义预下载的临时存储目录
+        predownload_root = self.game_folder / ".predownload"
+        predownload_root.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"发现预下载版本: {version}")
+        logger.info(f"预下载文件将存储于: {predownload_root}")
+
+        tasks = []
+        for item in res_list:
+            # 保持相对路径结构
+            rel_path = item["dest"]
+            dest_path = predownload_root / rel_path
+            expected_size = int(item["size"])
+
+            # 简单的跳过逻辑：如果文件存在且大小一致则跳过
+            if dest_path.exists() and dest_path.stat().st_size == expected_size:
+                continue
+
+            url = urljoin(self.cdn_node, f"{res_base}/{rel_path}")
+            tasks.append(
+                {
+                    "url": quote(url, safe=":/"),
+                    "path": dest_path,
+                    "size": expected_size,
+                }
+            )
+
+        if tasks:
+            self._batch_download(tasks)
+            # 保存一个标记文件，记录预下载的版本，方便后续应用
+            with open(predownload_root / "predownload_version.json", "w") as f:
+                json.dump({"version": version, "server": self.server_type}, f)
+            logger.info("预下载完成！")
+        else:
+            logger.info("预下载文件已全部就绪。")
+
+    # 应用预下载
+    def apply_predownload(self):
+        predownload_root = self.game_folder / ".predownload"
+        version_file = predownload_root / "predownload_version.json"
+
+        if not predownload_root.exists() or not version_file.exists():
+            raise ConfigError("未找到有效的预下载内容，请先执行预下载。")
+
+        # 读取版本信息
+        try:
+            with open(version_file, "r") as f:
+                info = json.load(f)
+                target_version = info["version"]
+                if info["server"] != self.server_type:
+                    raise ConfigError(f"预下载的服务器类型 ({info['server']}) 与当前不符。")
+        except Exception:
+            raise ConfigError("预下载版本信息损坏。")
+
+        logger.info(f"正在应用更新 (目标版本: {target_version})...")
+
+        # 1. 移动文件
+        # 遍历 .predownload 下的所有文件并移动到 game_folder
+        count = 0
+        for file_path in predownload_root.rglob("*"):
+            if file_path.is_file() and file_path.name != "predownload_version.json":
+                # 计算相对路径
+                rel_path = file_path.relative_to(predownload_root)
+                dest_path = self.game_folder / rel_path
+
+                # 确保目标文件夹存在
+                dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+                # 移动文件 (如果存在则覆盖)
+                shutil.move(str(file_path), str(dest_path))
+                # 清除旧文件的 MD5 缓存
+                self.md5_cache.clear(dest_path)
+                count += 1
+
+        logger.info(f"已合并 {count} 个文件。")
+
+        # 2. 清理预下载目录
+        shutil.rmtree(predownload_root)
+
+        # 3. 更新本地配置文件版本号
+        cfg_path = self.game_folder / "launcherDownloadConfig.json"
+        if cfg_path.exists():
+            with open(cfg_path, "r+") as f:
+                data = json.load(f)
+                data["version"] = target_version
+                f.seek(0)
+                json.dump(data, f, indent=4)
+                f.truncate()
+
+        logger.info("预下载资源已合并。正在进行最终完整性校验...")
+
+        # 4. 强制执行一次 Sync 以确保万无一失
+        self._launcher_info = None
+        self._game_index = None
+        self.sync_files(force_check_md5=False)
+
+        logger.info(f"更新完成！当前版本: {target_version}")
+
     def checkout(self, target_server: str, force_sync: bool = False):
         # 1. 禁用当前差异文件
         for _, files in SERVER_DIFF_FILES.items():
@@ -415,8 +550,6 @@ class WGameManager:
                 pass
             else:
                 missing = True
-                # 我发现这玩意没啥用
-                # logger.warning(f"缺失差异文件: {f_rel}")
 
         # 3. 更新配置
         self.server_type = target_server
@@ -430,9 +563,11 @@ class WGameManager:
             self.sync_files(force_check_md5=True)
 
     def _update_local_config(self):
-        v = self.launcher_info["default"]["version"]
-        cfg = {"version": v, "appId": self.config["appId"], "group": "default"}
-        self.game_folder.mkdir(parents=True, exist_ok=True)
-        with open(self.game_folder / "launcherDownloadConfig.json", "w") as f:
-            json.dump(cfg, f, indent=4)
-        logger.info(f"已更新本地配置: {self.server_type} ({v})")
+        # 优先使用 launcher_info 中的版本，如果获取不到则保持原状或报错
+        if self._launcher_info:
+            v = self.launcher_info["default"]["version"]
+            cfg = {"version": v, "appId": self.config["appId"], "group": "default"}
+            self.game_folder.mkdir(parents=True, exist_ok=True)
+            with open(self.game_folder / "launcherDownloadConfig.json", "w") as f:
+                json.dump(cfg, f, indent=4)
+            logger.info(f"本地配置已更新: {self.server_type} ({v})")

@@ -150,6 +150,59 @@ def checkout(
         raise typer.Exit(1)
 
 
+predownload_app = typer.Typer(help="预下载管理 (新版本增量更新)")
+app.add_typer(predownload_app, name="predownload")
+
+
+@predownload_app.command("install")
+def predownload_install(ctx: typer.Context):
+    """下载新版本资源 (存放在 .predownload 目录)"""
+    path = get_game_path(ctx)
+    # 自动探测服务器
+    cfg_file = path / "launcherDownloadConfig.json"
+    server = "cn"
+    if cfg_file.exists():
+        try:
+            d = json.loads(cfg_file.read_text(encoding="utf-8"))
+            server = APPID_TO_SERVER.get(d.get("appId"), "cn")
+        except Exception:
+            pass
+
+    try:
+        mgr = WGameManager(path, server)
+        mgr.download_predownload()
+    except WWError as e:
+        typer.secho(f"预下载失败: {e}", fg="red")
+        raise typer.Exit(1)
+
+
+@predownload_app.command("apply")
+def predownload_apply(ctx: typer.Context):
+    """[尚未验证] 应用预下载资源 (版本更新后使用)"""
+    path = get_game_path(ctx)
+    # 自动探测服务器
+    cfg_file = path / "launcherDownloadConfig.json"
+    server = "cn"
+    if cfg_file.exists():
+        try:
+            d = json.loads(cfg_file.read_text(encoding="utf-8"))
+            server = APPID_TO_SERVER.get(d.get("appId"), "cn")
+        except Exception:
+            pass
+
+    typer.confirm(
+        "确定要应用预下载资源吗？\n这将会覆盖现有的游戏文件，请确保游戏**目前已关闭**且**官方已开启版本更新**。",
+        abort=True,
+    )
+
+    try:
+        mgr = WGameManager(path, server)
+        mgr.apply_predownload()
+    except WWError as e:
+        typer.secho(f"应用更新失败: {e}", fg="red")
+        raise typer.Exit(1)
+
+
 @app.command()
 def log(
     ctx: typer.Context,
