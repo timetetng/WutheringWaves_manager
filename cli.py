@@ -150,7 +150,7 @@ def checkout(
         raise typer.Exit(1)
 
 
-predownload_app = typer.Typer(help="预下载管理 (新版本增量更新)")
+predownload_app = typer.Typer(help="预下载管理 (尚未支持增量更新)")
 app.add_typer(predownload_app, name="predownload")
 
 
@@ -191,7 +191,7 @@ def predownload_apply(ctx: typer.Context):
             pass
 
     typer.confirm(
-        "确定要应用预下载资源吗？\n这将会覆盖现有的游戏文件，请确保游戏**目前已关闭**且**官方已开启版本更新**。",
+        "确定要应用预下载资源吗？\n这将会覆盖现有的游戏文件，请确保游戏目前已关闭且官方已开启版本更新。",
         abort=True,
     )
 

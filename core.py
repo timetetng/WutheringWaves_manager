@@ -206,8 +206,7 @@ class WGameManager:
     # 获取预下载信息
     @property
     def predownload_index(self):
-        # 检查是否有 predownload 字段
-        pre_info = self.launcher_info.get("default", {}).get("predownload")
+        pre_info = self.launcher_info.get("predownload")
         if not pre_info:
             return None
 
@@ -218,7 +217,7 @@ class WGameManager:
             return None
 
         url = urljoin(self.cdn_node, uri)
-        logger.info("下载预下载文件清单 (Predownload Index)...")
+        logger.info("下载预下载文件清单...")
         return self._http_get_json(url)
 
     def _http_get_json(self, url: str) -> Optional[Any]:
@@ -412,7 +411,8 @@ class WGameManager:
 
     # 执行预下载
     def download_predownload(self):
-        pre_info = self.launcher_info.get("default", {}).get("predownload")
+        # 1. 获取预下载配置
+        pre_info = self.launcher_info.get("predownload")
         if not pre_info:
             logger.warning("当前服务器暂无预下载信息。")
             return
@@ -422,46 +422,62 @@ class WGameManager:
             logger.error("无法获取预下载清单。")
             return
 
-        # 获取预下载的基础路径和资源列表
         res_base = pre_info["resourcesBasePath"]
         res_list = index["resource"]
         version = pre_info["version"]
 
-        # 定义预下载的临时存储目录
         predownload_root = self.game_folder / ".predownload"
         predownload_root.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"发现预下载版本: {version}")
-        logger.info(f"预下载文件将存储于: {predownload_root}")
+        logger.info(f"预下载目录: {predownload_root}")
+        logger.info("正在对比本地文件MD5...")
 
         tasks = []
+        skipped_size = 0
+        skipped_count = 0
+
+        # 2. 遍历新版本的文件列表
         for item in res_list:
-            # 保持相对路径结构
-            rel_path = item["dest"]
-            dest_path = predownload_root / rel_path
+            # 路径处理
+            rel_path = item["dest"].replace("\\", "/")
+            expected_md5 = item["md5"]
             expected_size = int(item["size"])
 
-            # 简单的跳过逻辑：如果文件存在且大小一致则跳过
-            if dest_path.exists() and dest_path.stat().st_size == expected_size:
+            target_dest = predownload_root / rel_path
+            current_game_file = self.game_folder / rel_path
+
+            # 情况 A: 预下载目录里已经下载好了
+            if target_dest.exists() and target_dest.stat().st_size == expected_size:
                 continue
 
-            url = urljoin(self.cdn_node, f"{res_base}/{rel_path}")
+            # 情况 B: 当前游戏目录里已经有这个文件，且 MD5 没变 (无需下载)
+            if current_game_file.exists() and current_game_file.stat().st_size == expected_size:
+                # 只有大小一致时才去查 MD5，利用缓存加速
+                local_md5 = self.md5_cache.get(current_game_file)
+                if local_md5 == expected_md5:
+                    skipped_size += expected_size
+                    skipped_count += 1
+                    continue
+
+            # 情况 C: 需要下载
+            url = urljoin(self.cdn_node, f"{res_base}/{item['dest']}")  # URL 保持原样
             tasks.append(
                 {
                     "url": quote(url, safe=":/"),
-                    "path": dest_path,
+                    "path": target_dest,
                     "size": expected_size,
                 }
             )
 
         if tasks:
             self._batch_download(tasks)
-            # 保存一个标记文件，记录预下载的版本，方便后续应用
+            # 保存版本标记
             with open(predownload_root / "predownload_version.json", "w") as f:
                 json.dump({"version": version, "server": self.server_type}, f)
             logger.info("预下载完成！")
         else:
-            logger.info("预下载文件已全部就绪。")
+            logger.info("所有文件校验一致，无需下载。")
 
     # 应用预下载
     def apply_predownload(self):
@@ -483,7 +499,7 @@ class WGameManager:
 
         logger.info(f"正在应用更新 (目标版本: {target_version})...")
 
-        # 1. 移动文件
+        # 1. 移动文件 (合并/覆盖)
         # 遍历 .predownload 下的所有文件并移动到 game_folder
         count = 0
         for file_path in predownload_root.rglob("*"):
@@ -519,6 +535,7 @@ class WGameManager:
         logger.info("预下载资源已合并。正在进行最终完整性校验...")
 
         # 4. 强制执行一次 Sync 以确保万无一失
+        # 我们需要刷新一下 self._launcher_info 和 self._game_index，因为版本变了
         self._launcher_info = None
         self._game_index = None
         self.sync_files(force_check_md5=False)
