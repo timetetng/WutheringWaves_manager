@@ -97,18 +97,18 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 - **更新工具**
 
   - 从本地源码构建安装:
-  ```bash
-  # 从本地源码构建，更新时需拉取最新源码
-  git pull
-  # 在源码目录下执行，重新构建工具
-  uv tool install . --force
-  ```
+    ```bash
+    # 从本地源码构建，更新时需拉取最新源码
+    git pull
+    # 在源码目录下执行，重新构建工具
+    uv tool install . --force
+    ```
 
   - 远程或 PyPI 安装:
 
-  ```bash
-  uv tool upgrade ww-manager
-  ```
+    ```bash
+    uv tool upgrade ww-manager
+    ```
 
 - **卸载工具**
 
