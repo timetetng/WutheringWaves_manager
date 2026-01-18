@@ -87,7 +87,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 - **方式三: 从 PyPI 源安装**
 
   ```bash
-  uv tool intall ww-manager
+  uv tool install ww-manager
   ```
 
 安装完成后，你就可以在终端的任意位置直接使用 **`ww`** 命令了！
