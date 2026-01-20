@@ -1,4 +1,12 @@
 #!/bin/bash
+# Linux 终末地食用指南
+# 1. 官网下载启动器 HypergryphLauncher_1.0.0_1_1_endfield.exe
+# 2. 下载 [dwproton](https://dawn.wine/dawn-winery/dwproton/releases) 并解压到 ~/.local/share/Steam/compatibilitytools.d (同本项目的GE-Proton安装方式，Steam 能识别到即可)
+# 3. 使用 Steam 添加非 Steam 游戏打开启动器，属性开启强制兼容性，并勾选 dwproton, 启动参数 steamdeck=1, 启动游戏
+# 4. 初次使用需选择安装路径，全部默认即可，将会安装在形如 .local/share/Steam/steamapps/compatdata/4046059116(随机数字)/pfx/drive_c/ 这个容器的虚拟C盘中
+# 5. 可以选择在初次启动下载全部游戏资源，然后将对应路径填写到下面的脚本中
+# 6. 创建 ~/.local/share/applications/Endfield.desktop 并以本脚本为启动命令，可以自行配置图标等信息。此后可以直接从应用菜单启动，无需 Steam
+
 
 # Proton 路径(实测终末地需要dwproton)
 PROTON_BIN="$HOME/.local/share/Steam/compatibilitytools.d/dwproton-10.0-14/proton"
