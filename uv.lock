@@ -391,13 +391,14 @@ wheels = [
 
 [[package]]
 name = "ww-manager"
-version = "2.0.5"
+version = "2.0.6"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },
     { name = "rich" },
     { name = "tqdm" },
     { name = "typer" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -412,6 +413,7 @@ requires-dist = [
     { name = "rich" },
     { name = "tqdm" },
     { name = "typer" },
+    { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
 
 [package.metadata.requires-dev]

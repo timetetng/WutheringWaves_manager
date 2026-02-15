@@ -223,7 +223,7 @@ ww log
 1. **Steam 设置**：
 
       * 添加“非 Steam 游戏”，指向 `/Client/Binaries/Win64/Client-Win64-Shipping.exe`。
-      * 在兼容性中强制使用 `GE-Proton` (参考项目`LutheringLaves` 或下面的指南下载并配置最新 GE-Proton )。
+      * 在兼容性中强制使用 `GE-Proton` 或 `dwproton` (如果 ACE 警告频繁请尝试切换 proton)
 
 2. **启动参数**：
     在 Steam 启动选项中添加：
@@ -235,12 +235,13 @@ ww log
 
 ## 致谢
 
-灵感来源于以下优秀项目：
+参考或使用以下优秀项目：
 
 * [WutheringWavesTool](https://github.com/leck995/WutheringWavesTool)
 * [LutheringLaves](https://github.com/last-live/LutheringLaves)
 * [Wuthering-Waves-Official-Bilibili](https://github.com/Hurry1027/Wuthering-Waves-Official-Bilibili)
 * [GE-Proton](https://github.com/GloriousEggroll/proton-ge-custom/releases/): 下载最新版本的 `GE-Proton` 并解压到 `~/.local/share/Steam/steamapps/common/` 目录下，启动 Steam，在**属性-兼容性**中能找到下载的 `GE-Proton` 即说明配置成功。
+* [dwproton](https://dawn.wine/dawn-winery/dwproton/releases): 安装方式同上
 
 <!-- end list -->
 
