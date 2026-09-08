@@ -184,7 +184,7 @@ def _calculate_file_md5(file_path: Path) -> str:
 
 
 def _is_diff_resource(dest: str) -> bool:
-    """判断资源路径是否是官方增量差分文件"""
+    """判断资源路径是否是增量文件"""
     return dest.lower().endswith((".krdiff", ".krpdiff"))
 
 
@@ -920,6 +920,39 @@ class IncrementalManager:
         logger.info(f"完整文件迁移完成: 更新={moved_count}, 已是目标版本={skipped_count}")
         return True
 
+    def _apply_delete_files(self, delete_files: List[str]) -> int:
+        """按清单删除补丁。
+
+        indexFile.json 的 deleteFiles 字段明确列出应删除的旧资源
+        残留会导致 UE 挂载覆盖新文件、热更卡死
+        """
+        removed = 0
+        failed = 0
+        for dest in delete_files or []:
+            try:
+                rel = _resource_rel_path(dest)
+            except IncrementalError:
+                logger.debug(f"跳过非法 deleteFiles 路径: {dest}")
+                continue
+            full = self.game_folder / rel
+            if not full.exists():
+                logger.debug(f"deleteFiles 目标不存在，跳过: {dest}")
+                continue
+            if full.is_dir():
+                logger.debug(f"跳过 deleteFiles 目录: {dest}")
+                continue
+            try:
+                full.unlink()
+                removed += 1
+            except OSError as e:
+                failed += 1
+                logger.debug(f"删除废弃文件失败 {dest}: {e}")
+        if removed:
+            logger.warning(f"已清理 {removed} 个废弃补丁")
+        if failed:
+            logger.warning(f"{failed} 个废弃补丁删除失败")
+        return removed
+
     def _apply_staged_patch_files(self, download_dir: Path) -> bool:
         """将已校验的增量输出文件统一迁移到游戏目录"""
         resources = (self.index_file or {}).get("resource", [])
@@ -1200,6 +1233,10 @@ class IncrementalManager:
         if not self._apply_staged_complete_files(download_dir):
             logger.warning("完整文件迁移失败，请运行 'ww sync' 修复。")
             return False
+
+        delete_files = (self.index_file or {}).get("deleteFiles", [])
+        if delete_files:
+            self._apply_delete_files(delete_files)
 
         logger.info("正在保存索引并清理临时目录...")
         saved_index = self.cache_dir / "indexFile.json"
@@ -1572,7 +1609,7 @@ class IncrementalManager:
         for item in resources:
             dest = item.get("dest")
             if dest and item.get("md5") and item.get("size") is not None and not _is_diff_resource(dest):
-                # resource 中的完整资源优先，贴近官方 BugFix File 使用 Resource File 的处理。
+                # resource 中的完整资源优先，贴近 BugFix File 使用 Resource File 的处理。
                 expected_files[dest] = item
 
         game_files = list(expected_files.values())
@@ -1631,6 +1668,10 @@ class IncrementalManager:
                         inconsistent_files.append(dest)
 
         logger.info(f"校验完成: 正常={ok_count}, 不一致={len(inconsistent_files)}, 缺失={len(missing_files)}")
+
+        delete_files = index_data.get("deleteFiles", [])
+        if delete_files:
+            self._apply_delete_files(delete_files)
 
         target_version = self._get_cached_target_version(download_dir)
 
